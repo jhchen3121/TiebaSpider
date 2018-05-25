@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>百度贴吧舆情分析系统</title>
+    
+    <link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<style type="text/css">
+    .m15{ margin: 15px;}
+     .tc{ text-align: center;font-size: 18px;font-weight: 600;}
+    </style>
+	
+</head>
+
+<body>
+    <div class="row">
+        <div class="col-md-5"></div>
+        <div class="col-xs-6 col-md-6">
+            <ul class="nav nav-pills">
+                <li role="presentation"><a href="http://192.168.80.140:5000/mesgshow">结果显示</a></li>
+                <li role="presentation" class="active"><a href="http://192.168.80.140:5000/spider_tools">爬虫工具</a></li>
+            </ul>
+        </div>
+    </div>
+	<div class="container"> 
+        <div class="jumbotron">
+			<div class="row">
+				<div class="col-xs-6 col-md-4"></div>
+				<div class="col-xs-6 col-md-4">
+					<h3 style="text-align: center;">后台管理工具</h3>
+				</div>
+			</div>
+			<br>
+			<br>
+			<div class="row">
+				<div class="col-sm-6 col-md-4">
+					<div class="thumbnail" >
+						<div class="caption">
+							<h3 style="text-align: center;">后台爬虫管理工具</h3>
+							<Button class="btn btn-primary btn-block" id="begin_spider">开启爬虫</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-6 col-md-4">
+					<div class="thumbnail" >
+						<div class="caption">
+							<h3 style="text-align: center">后台关键词词云生成工具</h3>
+							<Button class="btn btn-primary btn-block" id="build_wd" disabled>生成关键词</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-10 col-md-4">
+					<div class="thumbnail" >
+						<div class="caption">
+							<h3 style="text-align: center">生成舆情分析表显示</h3>
+							<Button class="btn btn-primary btn-block" id="build_snownlp" >生成分析结果</button>
+						</div>
+					</div>
+				</div>
+			</div>
+            <br>
+            <br>
+            <div class="row">
+                <div class="progress" id="hideprogid">
+                    <div id="progressid" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                        <span id="proglabel">正在加载...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row" id="snownlp_id">
+                <a href="http://192.168.80.140:5000/show_snownlp_pic">点击查看</a>
+            </div>
+		</div>
+    </div>
+  
+    <script>
+	//一进来就要先查看爬虫的状态，访问后台
+	window.onload=function(){
+        //隐藏进度条
+        $("#hideprogid").hide();
+        $("#snownlp_id").hide();
+
+		$.ajax({
+			url:'/celery_task_status',
+			type:'GET',
+			success: function(data, status){
+				if(status == 'success'){ 
+                    if(data.code == 0){
+                        console.log(data);
+                        //根据状态来控制按钮是否可以点击
+                        if(data.reason == '进行中'){
+                            $('#begin_spider').attr("disabled",'false');
+                            //如果是进行中则需要显示进度条
+                            $("#hideprogid").show();
+                            //在启动定时器监听状态
+                            for(var i=0; i<100; i++){
+                                clearInterval(i);
+                            }
+                            setInterval('check_spider_status()', 1000);
+                        }
+                        else{
+                            $('#begin_spider').removeAttr("disabled");
+                            $('#build_wd').removeAttr("disabled");
+                        }
+                    }
+                    else{
+                        alert(data.reason);
+                    }
+				}
+			},
+			error: function(data,status){ 
+				if(status == 'error'){ 
+                    alert("错误");
+				}
+			}
+		});
+        //检查分析结果是否已存在
+		$.ajax({
+			url:'/check_snownlp',
+			type:'GET',
+			success: function(data, status){
+				if(status == 'success'){ 
+                    if(data.code == 0){
+                        $("#snownlp_id").show(1000);
+                    }
+                    else{
+                        //$("#snownlp_id").hide();
+                    }
+				}
+			},
+			error: function(data,status){ 
+				if(status == 'error'){ 
+                    alert("错误");
+				}
+			}
+		});
+
+	}
+
+    //定时器定期访问后台
+    function check_spider_status(){
+        $("#hideprogid").show(1000);
+        $.ajax({
+            url:'/celery_spider_prog',
+            type:'GET',
+            success: function(data, status){
+                if(status == 'success'){
+                    /*if(data.code == 0){
+                        for(var i=0; i<100; i++){
+                            clearInterval(i);
+                        }
+                        //隐藏进度条，显示用户信息
+                        $("#hideprogid").hide(1000);
+                        $("#hideusermsgid").show(1000);
+                        $("#goback").show(1000);
+                    }
+                    if(data.code == 1){
+                        prog_val = prog_val + 1;
+                        if(prog_val < 99){
+                            $("#progressid").css("width", prog_val + "%").text(prog_val + "%");
+                        }
+                    }*/
+                    if(data.code == 0){
+                        console.log(data.reason);
+                        //返回成功的个数
+                        result = data.reason;
+                        if(result == '20'){
+                            for(var i=0; i<100; i++){
+                                clearInterval(i);
+                            }
+                            $("#hideprogid").hide(1000);
+                            $('#build_wd').removeAttr("disabled");
+                        }
+                        else{
+                            //改变进度条长度
+                            prog_val = result * 5;
+                            $("#progressid").css("width", prog_val + "%").text(prog_val + "%");
+                        }
+                    }
+                }
+            },
+            error: function(data,status){
+                if(status == 'error'){
+                    alert("错误");
+                }
+            }
+        });
+    }
+	
+	$(function () { 
+		$("#begin_spider").click(function(){
+			$.ajax({
+				url:'/begin_tieba_spider',
+				type:'GET',
+				success: function(data, status){
+					if(status == 'success'){ 
+                        if(data.code == 0){
+                            console.log(data);
+                            $('#begin_spider').attr("disabled",'false');
+                            //显示进度条并开启定时器
+                            $("#hideprogid").show(1000);
+                            setInterval('check_spider_status()', 1000);
+                        }
+                        else{
+                            alert(data.reason);
+                        }
+					}
+				},
+				error: function(data,status){ 
+					if(status == 'error'){ 
+                        alert("错误");
+					}
+				}
+			});
+		});
+		$("#build_wd").click(function(){
+           $.ajax({
+				url:'/build_wdcloud',
+				type:'GET',
+				success: function(data, status){
+					if(status == 'success'){ 
+                        if(data.code == 0){
+                            //alert("正在生成词云，请关注后台日志");
+                        }
+                        else{
+                            alert(data.reason);
+                        }
+					}
+				},
+				error: function(data,status){ 
+					if(status == 'error'){ 
+                        alert("错误");
+					}
+				}
+			});
+		});
+        $("#build_snownlp").click(function(){
+            $.ajax({
+				url:'/build_snownlp',
+				type:'GET',
+				success: function(data, status){
+					if(status == 'success'){ 
+                        if(data.code == 0){
+                            //alert("正在生成词云，请关注后台日志");
+                            $("#snownlp_id").show(1000);
+                        }
+                        else{
+                            //alert(data.reason);
+                        }
+					}
+				},
+				error: function(data,status){ 
+					if(status == 'error'){ 
+                        alert("错误");
+					}
+				}
+			});
+        });
+	})
+    </script>
+</body>
+</head>
+</html>

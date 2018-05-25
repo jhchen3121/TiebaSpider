@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>百度贴吧舆情分析系统</title>
+    <link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<style type="text/css">
+    .m15{ margin: 15px;}
+    .tc{ text-align: center;font-size: 18px;font-weight: 600;}
+    </style>
+	
+</head>
+<body>
+    <div class="container">
+			<form class="col-sm-offset-4 col-sm-4 form-horizontal" role="form" method="post" onsubmit="return false">
+				<fieldset>
+					<legend></legend>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<p class="tc">注册</p>
+						</div>
+					<div class="panel-body m15">
+					<div class="form-group">
+						<div class="input-group">
+						
+							<span class="input-group-addon">
+								<span class="glyphicon glyphicon-user"></span>
+							</span>
+							<input type="number" class="form-control" id="username" name="username" placeholder="请输入用户名(手机号)" required />
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon">
+							<span class="glyphicon glyphicon-lock"></span>
+							</span>
+							<input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required  />
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="input-group">
+							<span class="input-group-addon">
+							<span class="glyphicon glyphicon-lock"></span>
+							</span>
+							<input type="password" class="form-control" id="confirm" name="confirm" placeholder="请再次输入密码" required />
+						</div>
+					</div>
+					
+					
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">
+								<span class="glyphicon glyphicon-envelope"></span>
+								</span>
+								<input type="number" class="form-control" id="sm-code" name="sm_code" placeholder="请输入验证码" required />
+							</div>
+						</div>
+						
+					
+					
+					<div class="form-group">
+							<button type="button" id="get-sm-code" class="btn btn-primary btn-block" disabled >获取验证码</button>
+					</div>
+					<div class="form-group">
+						   <button type="submit" class="btn btn-primary btn-block" id="register">注册</button>
+					</div>
+					</div>
+					</div>
+				</fieldset>
+			</form>
+    </div>	
+	
+</body>
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="./jquery_timer.js"></script>
+    <script>
+	window.onload = function(){
+		
+		//var value = document.getElementById('username');
+		var username = $('#username')[0];
+		//console.log(value);
+		//js原生动态绑定
+		username.addEventListener("input", function(){
+			if (this.value.length == 11){
+				$('#get-sm-code').removeAttr("disabled");
+			}
+			else if (this.value.length >= 12){
+				alert('长度过长');
+				$('#username').val('');
+				$('#get-sm-code').attr("disabled",'false');
+			}
+			console.log(this.value);
+		},false);
+		
+		//点击验证码改变状态
+		$('#get-sm-code').click(function(){
+			$('#get-sm-code').attr("disabled",'false');
+			
+			var time = 3;
+			$('body').everyTime('1s',function(){
+				time -= 1;
+				$('#get-sm-code').text('验证码重新获取时间(' + time + ')s');
+				if (time == 0){
+					$('body').stopTime();
+					$('#get-sm-code').removeAttr('disabled');
+					$('#get-sm-code').text('重新获取验证码');
+				}
+			});
+		})
+		
+		
+		
+		$("#register").click(function(){
+			var username = $("#username").val();
+            var password = $("#password").val();
+            var confirm = $("#confirm").val();
+			var sm_code = $("#sm-code").val();
+            var data = {"username":username,"userpwd":password,"confirm":confirm,"sm_code":sm_code};
+			console.log(data);
+            $.ajax({ 
+                url:'/register_post',
+                type:'POST',
+                data: data,
+                dataType:'json',
+                success: function(data,status){ 
+                    if(status == 'success'){ 
+                        console.log(data);
+                        if(data.code == -1000){
+                            alert(data.reason);
+                        }
+                        if(data.code == -1001){
+                            alert(data.reason);
+                        }
+                        if(data.code == 1){
+                            alert(data.reason);
+                            location.href = 'login'; 
+                        }
+                    }
+                },
+                error: function(data,status){ 
+                    if(status == 'error'){ 
+                        alert("错误");
+                    }
+                }
+            });
+		});
+	}
+    </script>
+</html>

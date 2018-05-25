@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"> 
+	<title>百度贴吧舆情分析系统</title>
+	<link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./bootstrap-datetimepicker.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<style type="text/css">
+    .m15{ margin: 15px;}
+    .tc{ text-align: center;font-size: 18px;font-weight: 600;}
+	html,body{overflow:hidden;overflow-y:auto;}
+    </style
+</head>
+<body>
+
+
+<div class="row">
+    <div class="col-md-5"></div>
+    <div class="col-xs-6 col-md-6">
+        <ul class="nav nav-pills">
+            <li role="presentation" class="active"><a href="http://192.168.80.140:5000/mesgshow">结果显示</a></li>
+            <li role="presentation"><a href="http://192.168.80.140:5000/spider_tools">爬虫工具</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="row">
+  <div class="col-xs-6 col-md-6" style="margin-top:20px;text-align:center;">
+		<label>选择查看热议的日期：</label>
+		<input size="10" type="text" value="" class="form_datetime form-control" style="width:30%;display:inline-block;" id="datetimepicker">
+		
+		<div class="row" style="margin-top:20px;">
+			<div class="col-md-8 col-md-offset-2">
+				<div id="siteTable"></div>
+			</div>
+		</div>
+  </div>
+  <div class="col-xs-6 col-md-6">
+	<div class="container">
+        <form class="col-sm-offset-1 col-sm-4 form-horizontal" role="form" method="post" onsubmit="return false">
+            <div id="login_pane">
+            <fieldset>
+                <legend></legend>
+                <div class="panel panel-default">
+                <div class="panel-heading">
+                    <p class="tc">百度用户模拟登陆平台</p>
+                </div>
+                <div class="panel-body m15">
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-user"></span>
+                        </span>
+                        <input type="text" class="form-control" id="username" placeholder="请输入百度用户名" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-lock"></span>
+                        </span>
+                        <input type="password" class="form-control" id="password" placeholder="请输入对应密码" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block" id="login">登录</button>
+                        <button class="btn btn-primary btn-block" id="show_user_tag">查看标签</button>
+                </div>
+                </div>
+                </div>
+            </fieldset>
+            </div>
+
+            <div id="user_tag_table">
+                <div class="row" style="margin-top:20px;">
+                    <div class="col-md-8 col-md-offset-2">
+                        <div id="user_tag"></div>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-primary btn-block" id="back_to">返回登录框</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+  </div>
+</div>
+<script src="./bootstrap-datetimepicker.min.js"></script>
+<script>
+
+
+window.onload=function(){
+
+    //先显示登陆框
+    $('#login_pane').show();
+    $('#user_tag_table').hide();
+
+    var date = $('#datetimepicker').val();
+    console.log(date);
+    var data = {"date":date};
+    console.log(date);
+    $.ajax({
+        url:'/message_show_post',
+        type:'POST',
+        data:data,
+        success: function(data, status){
+            if (data.code == 0){
+                var items = data.result;
+                var col = 3;//表格列数
+                var td = items.length;
+                var i = 0;
+                var html ='<table class="table table-hover" align="center"> <tr> <th style="text-align:center;">日期</th><th style="text-align:center;">标题</th><th style="text-align:center;">操作</th></tr>';
+                for(var i=0;i<td;i++){
+                    if(items[i]){
+                        html += '<tr><td>' + items[i].datetime + '</td><td>' + items[i].title + '</td><td><a href="http://192.168.80.140:5000/img_show?title='+items[i].title+'&date='+items[i].datetime+'">查看图片</a></td> </tr>';
+                    }else{
+                        html += '<td></td>';
+                    }
+                }
+                html +="</tr></table>"
+                document.getElementById('siteTable').innerHTML = html;
+                console.log(items);
+            }
+            else{
+                alert('无数据');
+            }
+        },
+        error: function(data,status){
+            if(status == 'error'){
+                alert("错误");
+            }
+        }
+    });
+}
+	
+$(function () { 
+	$(".form_datetime").datetimepicker({
+		format: 'yyyy-mm-dd',//显示格式
+		todayHighlight: 1,//今天高亮
+		minView: "month",//设置只显示到月份
+		startView:2,
+		forceParse: 0,
+		showMeridian: 1,
+		autoclose: 1//选择后自动关闭
+	});
+	
+	//时间控件出现改变此时给后台发送请求
+	$('#datetimepicker').datetimepicker().on('changeDate', function(ev){
+		//日期格式的转换[Thu May 12 2016 08:00:00 GMT+0800 (中国标准时间]---->yyyy-MM-dd hh:mm:ss 
+		var date = ev.date.getFullYear() + '-' + (ev.date.getMonth() + 1) + '-' + ev.date.getDate()
+        var data = {"date":date};
+        console.log(date);
+        $.ajax({
+            url:'/message_show_post',
+            type:'POST',
+            data:data,
+            success: function(data, status){
+				if (data.code == 0){
+					var items = data.result;
+					var col = 3;//表格列数
+					var td = items.length;
+					var i = 0;
+					var html ='<table class="table table-hover" align="center"> <tr> <th style="text-align:center;">日期</th><th style="text-align:center;">标题</th><th style="text-align:center;">操作</th></tr>';
+					for(var i=0;i<td;i++){
+						if(items[i]){
+							html += '<tr><td>' + items[i].datetime + '</td><td>' + items[i].title + '</td><td><a href="http://192.168.80.140:5000/img_show?title='+items[i].title+'&date='+items[i].datetime+'">查看图片</a></td> </tr>';
+						}else{
+							html += '<td></td>';
+						}
+					}
+					html +="</tr></table>"
+					document.getElementById('siteTable').innerHTML = html;
+					console.log(items);
+				}
+				else{
+					alert('无数据');
+				}
+            },
+            error: function(data,status){
+                if(status == 'error'){
+                    alert("错误");
+                }
+            }
+        });
+	});
+    //模拟登陆
+    $('#login').click(function(){
+        //请求发起完毕之后跳转至进度条页面        
+        var username = $("#username").val();
+        var password = $("#password").val();
+
+        var data = {"username": username, "password": password};
+        $.ajax({
+            url: '/tieba_login',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            success: function(data, status){
+                if(status == 'success'){
+                    if(data.code == 0){
+                        //跳转至对应页面
+                        //location.href = 'tb_user_msg';
+                        $('#login_pane').hide();
+                        $('#user_tag_table').show(1000);
+
+                        $.ajax({
+                            url: '/user_tag_get',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(data, status){
+                                if(status == 'success'){
+                                    if(data.code == 0){
+                                    
+                                    }
+                                }
+                            }
+                        })
+                        var html = '<h>123123</h>';
+                        document.getElementById('user_tag').innerHTML = html;
+                    }
+                }
+            },
+            error: function(data, status){
+                if(status == "error"){
+                    alert("错误")
+                }
+            }
+        })
+    });
+    $('#back_to').click(function(){
+        $('#login_pane').show(1000);
+        $('#user_tag_table').hide();
+    });
+    $('#show_user_tag').click(function(){
+        $('#login_pane').hide();
+        $('#user_tag_table').show(1000);
+
+        $.ajax({
+            url: '/user_tag_get',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data, status){
+                if(status == 'success'){
+                    if(data.code == 0){
+                    
+                        var items = data.result;
+                        var col = 2;//表格列数
+                        var td = items.length;
+                        var i = 0;
+                        var html = '';
+                        for(var i=0;i<td;i++){
+                            //if(items[i]){
+                            //    html += '<tr><td>' + items[i].user_name + '</td><td>' + items[i].tag + '</td> </tr>';
+                            //}else{
+                            //    html += '<td></td>';
+                            //}
+                            html += '<p>用户名：' + items[i].user_name + '</p>';
+                            html += '<p>标签：' + items[i].tag + '</p>';
+
+                            html += '<br>'
+                        }
+
+                        document.getElementById('user_tag').innerHTML = html;
+                    }
+                }
+            }
+        })
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>百度贴吧舆情分析系统</title>
+    
+    <link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<style type="text/css">
+    .m15{ margin: 15px;}
+     .tc{ text-align: center;font-size: 18px;font-weight: 600;}
+    </style>
+	
+</head>
+
+<body >
+	<div class="container"> 
+		<div class="progress" id="hideprogid">
+			<div id="progressid" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+				<span id="proglabel">正在加载...</span>
+			</div>
+		</div>
+		
+		<div id="hideusermsgid">
+			用户信息
+		</div>
+		<div>
+			<Button id="test">test</Button>
+			<!--返回按钮也需要在用户信息显示完毕之后在显示出来-->
+			<Button id="goback">返回</Button>
+		</div>
+    </div>
+  
+    <script>
+	//全局进度条定义
+	var prog_val = 0;
+	
+	window.onload=function(){
+		$("#hideusermsgid").hide();
+		$("#goback").hide();
+		
+		//先利用定时器让进度条增长至80%，然后再去不停地访问后台url查看模拟登陆进度
+		setInterval('check_login_status()', 100);
+	}
+	
+	function check_login_status(){
+	
+		prog_val = prog_val + 1;
+		$("#progressid").css("width", prog_val + "%").text(prog_val + "%");
+		
+		if(prog_val == 80){
+			//取消进度条当前定时器
+			for(var i=0; i<100; i++){
+				clearInterval(i);
+			}
+			//开始监听loging_celery
+			setInterval('check_celery_status()', 1000);
+		}
+	}
+	function check_celery_status(){
+		$.ajax({
+			url:'/tieba_login_status',
+			type:'GET',
+			success: function(data, status){
+				if(status == 'success'){ 
+                    if(data.code == 0){
+						for(var i=0; i<100; i++){
+							clearInterval(i);
+						}
+                        //隐藏进度条，显示用户信息
+						$("#hideprogid").hide(1000);
+						$("#hideusermsgid").show(1000);
+                        $("#goback").show(1000);
+                    }
+                    if(data.code == 1){
+						prog_val = prog_val + 1;
+						if(prog_val < 99){
+							$("#progressid").css("width", prog_val + "%").text(prog_val + "%");
+						}
+					}
+				}
+			},
+			error: function(data,status){ 
+				if(status == 'error'){ 
+                    alert("错误");
+				}
+			}
+		});
+	}
+	
+	$(function () { 
+		$("#test").click(function(){
+			$("#progressid").css("width","10%").text("10%");
+			//$("#progressid").css("width",value + "%").text(value + "%");
+			//hide是隐藏,参数为消失的时间
+			$("#hideprogid").hide(1000);
+			$("#hideusermsgid").show(1000);
+		});
+		$("#goback").click(function(){
+			window.location.href = 'mesgshow';
+		});
+		$("#begin_spider").click(function(){
+			$.ajax({
+				url:'tieba_login_status',
+				type:'GET',
+				success: function(data, status){
+					if(status == 'success'){ 
+                        if(data.code == 0){
+                            location.href = 'mesgshow'
+                        }
+                        else{
+                            alert(data.reason);
+                            $("#username").val('');
+                            $("#password").val('');
+                        }
+					}
+				},
+				error: function(data,status){ 
+					if(status == 'error'){ 
+                        alert("错误");
+					}
+				}
+			});
+		});
+		$("#build_wd").click(function(){
+			$.ajax({
+				url:'',
+				type:'GET',
+				success: function(data, status){
+					if(status == 'success'){ 
+                        if(data.code == 0){
+                            location.href = 'mesgshow'
+                        }
+                        else{
+                            alert(data.reason);
+                            $("#username").val('');
+                            $("#password").val('');
+                        }
+					}
+				},
+				error: function(data,status){ 
+					if(status == 'error'){ 
+                        alert("错误");
+					}
+				}
+			});
+		});
+	})
+    </script>
+</body>
+</head>
+</html>

@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>百度贴吧舆情分析系统</title>
+    
+    <link rel="stylesheet" href="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<style type="text/css">
+    .m15{ 
+        margin: 15px;
+    }
+    .tc{ 
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+    }
+    body{
+      width: 100%;
+      height:auto;
+      background:url("/static/login_bg.jpg");
+      background-size: 100%;
+    }
+    </style>
+	
+</head>
+<body >
+    <div class="container">
+   
+        <form class="col-sm-offset-4 col-sm-4 form-horizontal" role="form" method="post" onsubmit="return false">
+            <fieldset>
+                <legend></legend>
+                <div class="panel panel-default">
+                <div class="panel-heading">
+                    <p class="tc">登陆</p>
+                </div>
+                <div class="panel-body m15">
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-user"></span>
+                        </span>
+                        <input type="number" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-lock"></span>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block" id="login">登录</button>
+                </div>
+                <div class="form-group">
+					   <button class="btn btn-primary btn-block" id="register">快速注册</button>
+                </div>
+                </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+
+   
+  
+    <script>
+		$(function () { 
+			$("#register").click(function(){ 
+				window.location.href = 'register';
+			});
+			$("#login").click(function(){ 
+				var username = $("#username").val();
+				var password = $("#password").val();
+				var data = {"username":username,"password":password};
+				console.log(data);
+				$.ajax({ 
+					url:'/login_post',
+					type:'POST',
+					data: data,
+					success: function(data,status){ 
+						if(status == 'success'){ 
+                            if(data.code == 0){
+                                location.href = 'mesgshow'
+                            }
+                            else{
+                                alert(data.reason);
+                                $("#username").val('');
+                                $("#password").val('');
+                            }
+						}
+					},
+					error: function(data,status){ 
+						if(status == 'error'){ 
+                            alert("错误");
+						}
+					}
+				});
+			});
+		});
+    </script>
+</body>
+</head>
+</html>
